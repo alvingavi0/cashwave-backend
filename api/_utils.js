@@ -3,29 +3,44 @@ const axios = require('axios');
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
-  let projectId = process.env.FIREBASE_PROJECT_ID;
-  let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-  // Handle various private key formats
-  if (privateKey) {
-    if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
-        (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
-      privateKey = privateKey.slice(1, -1);
-    }
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
-
-  if (!projectId || !clientEmail || !privateKey) {
-    console.error('WARNING: Firebase admin credentials not fully set. Some API calls will fail without them.');
-  } else {
+  // Preferred: single env var containing the full service account JSON
+  const svcJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (svcJson) {
     try {
+      const serviceAccount = JSON.parse(svcJson);
       admin.initializeApp({
-        credential: admin.credential.cert({ projectId, clientEmail, privateKey })
+        credential: admin.credential.cert(serviceAccount)
       });
-      console.log('✓ Firebase Admin initialized');
+      console.log('✓ Firebase Admin initialized from FIREBASE_SERVICE_ACCOUNT');
     } catch (err) {
-      console.error('Failed initializing Firebase Admin:', err.message);
+      console.error('Failed parsing FIREBASE_SERVICE_ACCOUNT JSON:', err.message || err);
+    }
+  } else {
+    // Backwards-compatible fallback (not recommended on Render due to newline issues)
+    let projectId = process.env.FIREBASE_PROJECT_ID;
+    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+    // Handle different private key formats
+    if (privateKey) {
+      if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+          (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
+
+    if (!projectId || !clientEmail || !privateKey) {
+      console.warn('Firebase admin credentials not set. Set FIREBASE_SERVICE_ACCOUNT env var with the full service account JSON.');
+    } else {
+      try {
+        admin.initializeApp({
+          credential: admin.credential.cert({ projectId, clientEmail, privateKey })
+        });
+        console.log('✓ Firebase Admin initialized from individual env vars');
+      } catch (err) {
+        console.error('Failed initializing Firebase Admin:', err.message);
+      }
     }
   }
 }

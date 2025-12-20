@@ -45,13 +45,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`\n✓ CashWave Backend Server`);
-  console.log(`  Environment: ${NODE_ENV}`);
-  console.log(`  Port: ${PORT}`);
-  console.log(`  URL: http://localhost:${PORT}`);
-  console.log(`  Health: http://localhost:${PORT}/health\n`);
-});
+app.listen(PORT, () => console.log('Server running on port ' + PORT));

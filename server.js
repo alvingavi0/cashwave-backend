@@ -29,9 +29,9 @@ apiRouter.get('/health', (req, res) => res.json({ ok: true }));
 
 app.use('/api', apiRouter);
 
-// Health check endpoint
+// Health check endpoint (minimal, no DB access)
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok' });
 });
 
 // 404 handler
